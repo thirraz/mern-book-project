@@ -1,0 +1,3 @@
+borderColors: #ff47da
+background: #050014
+font: #fff

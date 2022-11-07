@@ -1,4 +1,7 @@
 //DAO -> data access object
+import mongodb, { ObjectId } from "mongodb";
+const ObjectID = mongodb.ObjectId;
+
 let movies;
 
 export default class MoviesDAO {
@@ -44,6 +47,41 @@ export default class MoviesDAO {
 		} catch (e) {
 			console.log(`Unable to issue find command, ${e}`);
 			return { moviesList: [], totalNumMovies: 0 };
+		}
+	}
+
+	static async getRatings() {
+		let ratings = [];
+		try {
+			ratings = await movies.distinct("rated");
+			return ratings;
+		} catch (e) {
+			console.error(`unable to get ratings, ${e}`);
+		}
+	}
+
+	static async getMovieById(id) {
+		try {
+			return await movies
+				.aggregate([
+					{
+						$match: {
+							_id: new ObjectID(id),
+						},
+					},
+					{
+						$lookup: {
+							from: "reviews",
+							localField: "_id",
+							foreignField: "movie_id",
+							as: "reviews",
+						},
+					},
+				])
+				.next();
+		} catch (e) {
+			console.error(`something went wrong in getMovieById: ${e}`);
+			throw e;
 		}
 	}
 }
